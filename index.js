@@ -5,10 +5,19 @@ require('dotenv').config();
 const authRoutes = require('./Routes/authRoutes');
 
 const app = express();
+
+// Middlewares
 app.use(express.json());
+
+// Rutas
 app.use('/api/auth', authRoutes);
 
-// Conexión a MongoDB
+// Ruta básica para ver si está vivo el servidor
+app.get('/', (req, res) => {
+    res.send('API de Sideways funcionando 👟🔥');
+});
+
+// Conexión a MongoDB y levantar servidor
 mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true

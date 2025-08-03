@@ -9,7 +9,7 @@ const authRoutes = require('./Routes/authRoutes');
 
 const app = express();
 
-// ✅ Configura CORS solo para tu frontend (ajusta la URL final de tu frontend)
+// Configura CORS solo para tu frontend (ajusta la URL final de tu frontend)
 app.use(cors({
     origin: 'https://sideways.vercel.app', // ⬅️ cámbiala por la tuya
     credentials: true
@@ -18,7 +18,7 @@ app.use(cors({
 // Middleware para recibir JSON
 app.use(express.json());
 
-// ✅ Rutas de autenticación
+// Rutas de autenticación
 app.use('/api/auth', authRoutes);
 
 // Ruta base para comprobar funcionamiento
@@ -26,7 +26,7 @@ app.get('/', (req, res) => {
     res.send('API de Sideways funcionando 👟🔥');
 });
 
-// ✅ Conexión a MongoDB y arranque del servidor
+// Conexión a MongoDB y arranque del servidor
 mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true

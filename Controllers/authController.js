@@ -20,6 +20,10 @@ const sendVerificationEmail = async (user, req) => {
         html: `<p>Haz clic en el siguiente enlace para verificar tu cuenta:</p><a href="${url}">${url}</a>`,
     });
 };
+exports.googleLogin = async (req, res) => {
+    // Aquí luego irá la lógica con OAuth2
+    res.status(501).json({ msg: 'Inicio de sesión con Google aún no implementado.' });
+};
 
 exports.register = async (req, res) => {
     const { email, password } = req.body;

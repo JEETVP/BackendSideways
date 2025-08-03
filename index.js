@@ -2,31 +2,38 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const authRoutes = require('./Routes/authRoutes');
 
 dotenv.config();
 
-const authRoutes = require('./Routes/authRoutes');
-
 const app = express();
 
-// Configura CORS solo para tu frontend (ajusta la URL final de tu frontend)
+// CORS solo permite los orígenes específicos
+const allowedOrigins = ['https://sideways.com', 'http://localhost:3000'];
+
 app.use(cors({
-    origin: 'https://sideways.vercel.app', // ⬅️ cámbiala por la tuya
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
 
-// Middleware para recibir JSON
+// Middleware para JSON
 app.use(express.json());
 
-// Rutas de autenticación
+// Rutas
 app.use('/api/auth', authRoutes);
 
-// Ruta base para comprobar funcionamiento
+// Ruta de prueba
 app.get('/', (req, res) => {
     res.send('API de Sideways funcionando 👟🔥');
 });
 
-// Conexión a MongoDB y arranque del servidor
+// Conexión a MongoDB
 mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true

@@ -20,9 +20,19 @@ const sendVerificationEmail = async (user, req) => {
         html: `<p>Haz clic en el siguiente enlace para verificar tu cuenta:</p><a href="${url}">${url}</a>`,
     });
 };
-exports.googleLogin = async (req, res) => {
-    // Aquí luego irá la lógica con OAuth2
-    res.status(501).json({ msg: 'Inicio de sesión con Google aún no implementado.' });
+
+exports.handleGoogleCallback = async (req, res) => {
+    const user = req.user; // Viene desde Passport
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+
+    res.status(200).json({
+        msg: 'Autenticación con Google exitosa',
+        token,
+        user: {
+            id: user._id,
+            email: user.email
+        }
+    });
 };
 
 exports.register = async (req, res) => {

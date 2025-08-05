@@ -20,7 +20,22 @@ const sendVerificationEmail = async (user, req) => {
         html: `<p>Haz clic en el siguiente enlace para verificar tu cuenta:</p><a href="${url}">${url}</a>`,
     });
 };
+exports.deleteUserByEmail = async (req, res) => {
+    const { email } = req.body;
 
+    try {
+        const user = await User.findOneAndDelete({ email });
+
+        if (!user) {
+            return res.status(404).json({ msg: 'Usuario no encontrado.' });
+        }
+
+        res.status(200).json({ msg: 'Usuario eliminado correctamente.' });
+    } catch (error) {
+        console.error('Error al eliminar usuario:', error);
+        res.status(500).json({ msg: 'Error del servidor.' });
+    }
+};
 exports.handleGoogleCallback = async (req, res) => {
     const user = req.user; // Viene desde Passport
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });

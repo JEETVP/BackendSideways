@@ -8,6 +8,8 @@ router.post('/register', authController.register);
 router.post('/login', authController.login);
 router.get('/verify/:token', authController.verifyEmail);
 router.delete('/delete-user', authController.deleteUserByEmail);
+router.post('/refresh-token', authController.refreshToken);
+router.post('/logout', authController.logout);
 
 // ----------- GOOGLE AUTH RUTAS -----------
 

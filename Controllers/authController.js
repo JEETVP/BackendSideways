@@ -99,9 +99,9 @@ exports.login = async (req, res) => {
     user.loginAttempts = 0;
     user.lockUntil = undefined;
     await user.save();
-
+    console.log('JWT_SECRET desde backend:', process.env.JWT_SECRET);
     const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+    const refreshToken = jwt.sign({ id: user._id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
 
     res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
@@ -142,7 +142,7 @@ exports.logout = (req, res) => {
 exports.handleGoogleCallback = async (req, res) => {
     const user = req.user;
     const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+    const refreshToken = jwt.sign({ id: user._id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
 
     res.cookie('refreshToken', refreshToken, {
         httpOnly: true,

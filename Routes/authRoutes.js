@@ -6,7 +6,7 @@ const authController = require('../Controllers/authController');
 // Registro y login por correo
 router.post('/register', authController.register);
 router.post('/login', authController.login);
-router.get('/verify-email/:token', authController.verifyEmail);
+router.get('/verify/:token', authController.verifyEmail);
 router.delete('/delete-user', authController.deleteUserByEmail);
 
 // ----------- GOOGLE AUTH RUTAS -----------
@@ -19,7 +19,7 @@ router.get('/google',
 // Callback desde Google (pruebas sin frontend)
 router.get('/google/callback',
     passport.authenticate('google', {
-        failureRedirect: '/auth/google/failure', // solo para pruebas
+        failureRedirect: '/auth/google/failure',
         session: false
     }),
     authController.handleGoogleCallback
@@ -31,3 +31,4 @@ router.get('/google/failure', (req, res) => {
 });
 
 module.exports = router;
+

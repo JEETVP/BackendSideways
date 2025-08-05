@@ -11,10 +11,9 @@ require('./Config/googleStrategy'); // importa tu estrategia de Google
 const authRoutes = require('./Routes/authRoutes');
 
 dotenv.config();
-app.use(cookieParser());
 
 const app = express();
-
+app.use(cookieParser());
 // CORS solo permite los orígenes específicos
 const allowedOrigins = ['https://sideways.com', 'http://localhost:3000'];
 

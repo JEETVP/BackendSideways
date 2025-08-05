@@ -7,6 +7,7 @@ const authController = require('../Controllers/authController');
 router.post('/register', authController.register);
 router.post('/login', authController.login);
 router.get('/verify-email/:token', authController.verifyEmail);
+router.delete('/delete-user', authController.deleteUserByEmail);
 
 // ----------- GOOGLE AUTH RUTAS -----------
 

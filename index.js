@@ -1,4 +1,5 @@
-﻿const express = require('express');
+﻿require('dotenv').config();
+const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
@@ -10,7 +11,6 @@ require('./Config/googleStrategy'); // importa tu estrategia de Google
 
 const authRoutes = require('./Routes/authRoutes');
 
-dotenv.config();
 
 const app = express();
 app.use(cookieParser());

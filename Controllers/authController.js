@@ -58,13 +58,31 @@ exports.register = async (req, res) => {
 
 exports.verifyEmail = async (req, res) => {
     const user = await User.findOne({ verificationToken: req.params.token });
-    if (!user) return res.status(400).json({ msg: 'Token inválido o expirado.' });
+
+    if (!user) {
+        return res.status(400).send(`
+            <html>
+                <head><title>Error</title></head>
+                <body>
+                    <h1>Token inválido o expirado.</h1>
+                </body>
+            </html>
+        `);
+    }
 
     user.isVerified = true;
     user.verificationToken = undefined;
     await user.save();
 
-    res.status(200).json({ msg: 'Cuenta verificada correctamente.' });
+    res.status(200).send(`
+        <html>
+            <head><title>Verificado</title></head>
+            <body>
+                <h1>¡Tu cuenta ha sido verificada exitosamente!</h1>
+                <p>Ya puedes iniciar sesión en Sideways.</p>
+            </body>
+        </html>
+    `);
 };
 
 exports.login = async (req, res) => {

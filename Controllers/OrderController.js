@@ -17,23 +17,23 @@ const transporter = nodemailer.createTransport({
 
 exports.createOrder = async (req, res) => {
     try {
-        const userId = req.user.id; // ? validación 1: solo el usuario autenticado puede ordenar
+        const userId = req.user.id;
         const { addressId, cardId, products } = req.body;
 
         if (!products || products.length === 0) {
             return res.status(400).json({ msg: 'El carrito está vacío.' });
         }
 
-        // Validación 4: prevenir múltiples órdenes con misma tarjeta en poco tiempo
+        // Prevenir reuse rápido de tarjeta
         const recentOrder = await Order.findOne({
             card: cardId,
-            createdAt: { $gt: Date.now() - 60 * 1000 } // últimos 60 segundos
+            createdAt: { $gt: Date.now() - 60 * 1000 }
         });
         if (recentOrder) {
             return res.status(429).json({ msg: 'Espera un momento antes de usar esta tarjeta nuevamente.' });
         }
 
-        // Validar existencia y stock
+        // Validación de productos y cálculo del total
         let totalAmount = 0;
         const productDetails = [];
 
@@ -46,7 +46,6 @@ exports.createOrder = async (req, res) => {
                 return res.status(400).json({ msg: `Stock insuficiente para ${product.name} - Talla ${item.size}` });
             }
 
-            // Validación 2: Nunca usar precio del frontend
             totalAmount += product.price * item.quantity;
             productDetails.push({
                 product: product._id,
@@ -55,33 +54,34 @@ exports.createOrder = async (req, res) => {
             });
         }
 
-        // Validar dirección y tarjeta
+        // Validación de dirección
         const address = await Address.findById(addressId);
         if (!address || address.userId.toString() !== userId) {
             return res.status(403).json({ msg: 'Dirección inválida o no autorizada.' });
         }
 
+        // Validación de tarjeta
         const card = await Card.findById(cardId);
-        if (!card) return res.status(404).json({ msg: 'Tarjeta no encontrada.' });
+        if (!card || card.userId.toString() !== userId) {
+            return res.status(403).json({ msg: 'Tarjeta inválida o no autorizada.' });
+        }
 
-        // Crear pago con Stripe
+        // Procesar pago
         const paymentIntent = await stripe.paymentIntents.create({
             amount: Math.round(totalAmount * 100),
             currency: 'mxn',
             payment_method_types: ['card']
         });
 
-        // Validación 7: validar estado de pago
         if (!paymentIntent || paymentIntent.status !== 'succeeded') {
-            // Validación 8: registrar intento fallido
             console.error('Stripe payment failed:', paymentIntent);
             return res.status(400).json({ msg: 'Error en el pago con Stripe.' });
         }
 
-        // Generar número único de orden
+        // Generar número de orden
         const orderNumber = crypto.randomBytes(5).toString('hex').toUpperCase();
 
-        // Crear orden
+        // Guardar orden
         const order = new Order({
             orderNumber,
             user: userId,
@@ -103,28 +103,30 @@ exports.createOrder = async (req, res) => {
             );
         }
 
-        // Enviar correos
+        // Correos
         const clientEmail = req.user.email;
-        const itemsHtml = productDetails.map(p => `<li>${p.quantity} x ${p.priceAtPurchase} MXN</li>`).join('');
+        const itemsHtml = productDetails.map(p => `<li>${p.quantity} x $${p.priceAtPurchase} MXN</li>`).join('');
 
         const clientMessage = {
             to: clientEmail,
             subject: 'Confirmación de tu compra en Sideways',
-            html: `<h1>Gracias por tu compra</h1><ul>${itemsHtml}</ul><p>Total: ${totalAmount} MXN</p>`
+            html: `<h1>Gracias por tu compra</h1><ul>${itemsHtml}</ul><p>Total: $${totalAmount} MXN</p>`
         };
 
         const providerMessage = {
             to: 'betakanton9@gmail.com',
             subject: 'Nueva orden recibida',
-            html: `<h2>Detalles de la orden</h2><ul>${itemsHtml}</ul><p>Total: ${totalAmount} MXN</p><p>Dirección: ${address.street} #${address.extNumber}</p>`
+            html: `<h2>Detalles de la orden</h2><ul>${itemsHtml}</ul><p>Total: $${totalAmount} MXN</p><p>Dirección: ${address.street} #${address.extNumber}</p>`
         };
 
         await transporter.sendMail(clientMessage);
         await transporter.sendMail(providerMessage);
 
         res.status(201).json({ msg: 'Orden creada exitosamente', orderId: order._id });
+
     } catch (err) {
         console.error('Error al crear orden:', err);
         res.status(500).json({ msg: 'Error en el servidor al crear la orden.' });
     }
 };
+

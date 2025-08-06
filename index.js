@@ -7,7 +7,10 @@ const session = require('express-session');
 const cookieParser = require('cookie-parser');
 require('./Config/googleStrategy');
 const authRoutes = require('./Routes/authRoutes');
-const orderRoutes = require('./Routes/orderRoutes'); // asegúrate que el archivo existe y está bien nombrado
+const orderRoutes = require('./Routes/orderRoutes');
+const productRoutes = require('./Routes/productRoutes');
+const cardRoutes = require('./Routes/cardRoutes');
+const addressRoutes = require('./Routes/addressRoutes');
 const app = express();
 
 // Middlewares base 
@@ -38,7 +41,10 @@ app.use(passport.session());
 
 // Rutas API 
 app.use('/api/auth', authRoutes);
-app.use('/api/orders', orderRoutes); //DEJA esto después de middleware y antes de rutas personalizadas
+app.use('/api/orders', orderRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/cards', cardRoutes);
+app.use('/api/addresses', addressRoutes);
 
 // === Rutas públicas ===
 app.get('/', (req, res) => {

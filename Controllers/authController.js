@@ -78,7 +78,7 @@ exports.verifyEmail = async (req, res) => {
 // ===================== LOGIN =====================
 exports.login = async (req, res) => {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select('+password');
 
     if (!user) return res.status(400).json({ msg: 'Correo o contraseña incorrectos.' });
     if (!user.isVerified) return res.status(403).json({ msg: 'Verifica tu correo antes de iniciar sesión.' });

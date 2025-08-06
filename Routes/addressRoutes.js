@@ -5,5 +5,6 @@ const authenticate = require('../Middlewares/authMiddleware');
 
 // Agregar una nueva dirección
 router.post('/add', authenticate, addressController.addAddress);
+router.delete('/delete/:id', verifyToken, deleteAddress);
 
 module.exports = router;

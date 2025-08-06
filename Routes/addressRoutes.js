@@ -9,7 +9,4 @@ router.post('/add', authenticate, addressController.addAddress);
 // Eliminar una dirección por ID
 router.delete('/delete/:id', authenticate, addressController.deleteAddress);
 
-// (Opcional) Obtener todas las direcciones del usuario
-router.get('/my-addresses', authenticate, addressController.getUserAddresses);
-
 module.exports = router;

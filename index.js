@@ -10,10 +10,12 @@ require('./Config/googleStrategy'); // importa tu estrategia de Google
 
 
 const authRoutes = require('./Routes/authRoutes');
+const orderRoutes = require('./Routes/orderRoutes');
 
 
 const app = express();
 app.use(cookieParser());
+app.use('/api/orders', orderRoutes);
 // CORS solo permite los orígenes específicos
 const allowedOrigins = ['https://sideways.com', 'http://localhost:3000'];
 

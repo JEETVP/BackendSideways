@@ -78,3 +78,30 @@ exports.addAddress = async (req, res) => {
         res.status(500).json({ msg: 'Error del servidor al añadir dirección' });
     }
 };
+exports.deleteAddress = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const addressId = req.params.id;
+
+        // Verificar existencia de la dirección
+        const address = await Address.findById(addressId);
+
+        if (!address) {
+            return res.status(404).json({ msg: 'Dirección no encontrada.' });
+        }
+
+        // Validar que la dirección le pertenezca al usuario
+        if (address.userId.toString() !== userId) {
+            return res.status(403).json({ msg: 'No estás autorizado para eliminar esta dirección.' });
+        }
+
+        // Eliminar la dirección
+        await Address.findByIdAndDelete(addressId);
+
+        res.status(200).json({ msg: 'Dirección eliminada correctamente.' });
+    } catch (err) {
+        console.error('Error al eliminar dirección:', err);
+        res.status(500).json({ msg: 'Error del servidor al eliminar dirección.' });
+    }
+};
+

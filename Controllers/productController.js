@@ -1,82 +1,106 @@
-// controllers/productController.js
-const Product = require('../Models/Product');
+ï»¿const Product = require('../Models/Product');
 const validator = require('validator');
 
 // Crear un nuevo producto (solo admin)
 exports.createProduct = async (req, res) => {
     try {
-        // Validación 1: Solo admin
+        // 1) Solo admin
         if (!req.user || req.user.role !== 'admin') {
             return res.status(403).json({ msg: 'Acceso denegado. Solo administradores pueden crear productos.' });
         }
 
         const { name, sizes, price, image, description, category } = req.body;
 
-        // Validación 2: Campos requeridos y formato correcto
+        // 2) Campos requeridos (permitimos category opcional)
         if (!name || !sizes || !price || !image || !description) {
             return res.status(400).json({ msg: 'Todos los campos son obligatorios.' });
         }
 
-        if (!Array.isArray(sizes) || sizes.length === 0 || !sizes.every(s => s.size && typeof s.stock === 'number' && s.stock >= 0)) {
-            return res.status(400).json({ msg: 'Tallas inválidas. Deben incluir size y stock numérico válido.' });
+        // 3) Forzar numÃ©ricos aunque lleguen como string
+        const parsedPrice = Number(price);
+        if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
+            return res.status(400).json({ msg: 'Precio invÃ¡lido.' });
         }
 
-        if (typeof price !== 'number' || price <= 0) {
-            return res.status(400).json({ msg: 'Precio inválido.' });
+        if (!Array.isArray(sizes) || sizes.length === 0) {
+            return res.status(400).json({ msg: 'Tallas invÃ¡lidas. Deben venir en un arreglo.' });
+        }
+        const normalizedSizes = sizes.map(s => ({
+            size: s?.size,
+            stock: Number(s?.stock)
+        }));
+        if (!normalizedSizes.every(s => s.size && Number.isFinite(s.stock) && s.stock >= 0)) {
+            return res.status(400).json({ msg: 'Tallas invÃ¡lidas. Cada talla debe incluir "size" y "stock" numÃ©rico â‰¥ 0.' });
         }
 
-        if (!validator.isURL(image, { require_protocol: true })) {
-            return res.status(400).json({ msg: 'URL de imagen no válida.' });
+        // 4) URL de imagen vÃ¡lida (requiere http/https)
+        const isValidUrl = validator.isURL(String(image), {
+            protocols: ['http', 'https'],
+            require_protocol: true
+        });
+        if (!isValidUrl) {
+            return res.status(400).json({ msg: 'URL de imagen no vÃ¡lida (usa http/https).' });
         }
 
-        // Validación 3: No permitir productos duplicados
-        const existing = await Product.findOne({ name: name.trim() });
+        // 5) Evitar duplicados por nombre (case-insensitive)
+        const existing = await Product.findOne({
+            name: { $regex: `^${validator.escape(name.trim())}$`, $options: 'i' }
+        });
         if (existing) {
             return res.status(409).json({ msg: 'Ya existe un producto con ese nombre.' });
         }
 
-        // Validación 4: Saneado básico (puedes mejorarlo con dompurify si es necesario)
-        const sanitizedDescription = validator.escape(description);
-        const sanitizedName = validator.escape(name);
+        // 6) Saneado bÃ¡sico
+        const sanitizedName = validator.escape(name.trim());
+        const sanitizedDescription = validator.escape(description.trim());
 
+        // 7) Crear y guardar (el slug se autogenera en el modelo si seguiste mi schema)
         const newProduct = new Product({
             name: sanitizedName,
-            sizes,
-            price,
-            image,
+            sizes: normalizedSizes,
+            price: parsedPrice,
+            image: String(image).trim(),
             description: sanitizedDescription,
-            category
+            category: category ? String(category).trim().toLowerCase() : undefined
         });
 
         await newProduct.save();
-        res.status(201).json({ msg: 'Producto creado exitosamente', product: newProduct });
+        return res.status(201).json({ msg: 'Producto creado exitosamente', product: newProduct });
     } catch (err) {
         console.error('Error al crear producto:', err);
-        res.status(500).json({ msg: 'Error en el servidor.' });
+
+        // Errores comunes: duplicado por Ã­ndice Ãºnico (p.ej. slug)
+        if (err && err.code === 11000) {
+            return res.status(409).json({ msg: 'Conflicto por duplicado (Ã­ndice Ãºnico). Revisa nombre/slug.' });
+        }
+        // ValidaciÃ³n de Mongoose
+        if (err?.name === 'ValidationError') {
+            return res.status(400).json({ msg: 'ValidaciÃ³n fallida', details: err.errors });
+        }
+        return res.status(500).json({ msg: 'Error en el servidor.' });
     }
 };
 
-// Obtener todos los productos
+// Obtener todos los productos (acceso pÃºblico)
 exports.getAllProducts = async (req, res) => {
     try {
         const products = await Product.find();
-        res.status(200).json(products);
+        return res.status(200).json(products);
     } catch (err) {
         console.error('Error al obtener productos:', err);
-        res.status(500).json({ msg: 'Error en el servidor.' });
+        return res.status(500).json({ msg: 'Error en el servidor.' });
     }
 };
 
-// Obtener un producto por ID
+// Obtener un producto por ID (acceso pÃºblico)
 exports.getProductById = async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
-        if (!product) {
-            return res.status(404).json({ msg: 'Producto no encontrado' });
-        }
-        res.status(200).json(product);
+        if (!product) return res.status(404).json({ msg: 'Producto no encontrado' });
+        return res.status(200).json(product);
     } catch (err) {
         console.error('Error al buscar producto:', err);
-        res.status(500).json({ msg: 'Error en el servidor.' });
+        return res.status(500).json({ msg: 'Error en el servidor.' });
     }
 };
+

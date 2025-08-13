@@ -4,6 +4,13 @@ const RX_LETTERS_NUM_HYPH = /^[\p{L}\p{N}\s-]+$/u;      // letras, números, espa
 const RX_STREET = /^[\p{L}\p{N}\s#\-.]+$/u;   // calle: letras, números, espacio, #, -, .
 
 const cardSchema = new mongoose.Schema({
+
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+
     cardNumber: {
         select: false,
         type: String,

@@ -129,4 +129,60 @@ exports.createOrder = async (req, res) => {
         res.status(500).json({ msg: 'Error en el servidor al crear la orden.' });
     }
 };
+// Actualizar estatus de una orden (solo admin)
+exports.updateOrderStatus = async (req, res) => {
+    try {
+        // Autorización: admin por role o flag
+        const isAdmin = req.user && (req.user.role === 'admin' || req.user.isAdmin === true);
+        if (!isAdmin) {
+            return res.status(403).json({ msg: 'Acceso denegado. Solo administradores pueden actualizar el estatus de la orden.' });
+        }
+
+        const { id } = req.params;
+        const { status } = req.body;
+
+        // Valida estatus permitido (coincide con tu modelo)
+        const allowed = ['Pendiente', 'Pagado', 'Enviado', 'Entregado', 'Cancelado'];
+        if (!allowed.includes(status)) {
+            return res.status(400).json({ msg: `Estatus inválido. Usa uno de: ${allowed.join(', ')}` });
+        }
+
+        // Trae la orden
+        const order = await Order.findById(id);
+        if (!order) return res.status(404).json({ msg: 'Orden no encontrada' });
+
+        // Si es el mismo estatus, evita trabajo innecesario
+        if (order.status === status) {
+            return res.status(200).json({ msg: 'La orden ya tiene este estatus', order });
+        }
+
+        const prevStatus = order.status;
+        order.status = status;
+
+        // Campos derivados
+        if (status === 'Pagado') {
+            order.processedAt = new Date();
+            order.isCancelled = false;
+        }
+        if (status === 'Cancelado') {
+            order.isCancelled = true;
+        }
+        if (status === 'Entregado') {
+            // aquí podrías marcar flags adicionales si tu lógica lo requiere
+        }
+
+        // Historial
+        order.statusHistory.push({ status });
+
+        await order.save();
+        return res.status(200).json({
+            msg: 'Estatus de la orden actualizado correctamente',
+            prevStatus,
+            order
+        });
+    } catch (err) {
+        console.error('Error al actualizar estatus de la orden:', err);
+        return res.status(500).json({ msg: 'Error en el servidor al actualizar el estatus.' });
+    }
+};
 

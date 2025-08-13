@@ -108,5 +108,96 @@ exports.getProductById = async (req, res) => {
         return res.status(500).json({ msg: 'Error en el servidor.' });
     }
 };
+// Editar un producto (solo admin)
+exports.editProduct = async (req, res) => {
+    try {
+        const isAdmin =
+            req.user && (req.user.role === 'admin' || req.user.isAdmin === true);
+        if (!isAdmin) {
+            return res.status(403).json({ msg: 'Acceso denegado. Solo administradores pueden editar productos.' });
+        }
 
+        const { name, sizes, price, image, description, category, isActive } = req.body;
+
+        // Validar ID
+        const product = await Product.findById(req.params.id);
+        if (!product) return res.status(404).json({ msg: 'Producto no encontrado' });
+
+        // Validaciones básicas (solo si los campos se envían)
+        if (name) {
+            const existing = await Product.findOne({
+                _id: { $ne: req.params.id },
+                name: { $regex: `^${escapeRegExp(name.trim())}$`, $options: 'i' }
+            });
+            if (existing) {
+                return res.status(409).json({ msg: 'Ya existe un producto con ese nombre.' });
+            }
+            product.name = name.trim();
+        }
+
+        if (sizes) {
+            if (!Array.isArray(sizes) || sizes.length === 0) {
+                return res.status(400).json({ msg: 'Tallas inválidas. Deben venir en un arreglo.' });
+            }
+            const normalizedSizes = sizes.map(s => ({
+                size: s?.size,
+                stock: Number(s?.stock)
+            }));
+            if (!normalizedSizes.every(s => s.size && Number.isFinite(s.stock) && s.stock >= 0)) {
+                return res.status(400).json({ msg: 'Tallas inválidas. Cada talla debe incluir "size" y "stock" numérico ≥ 0.' });
+            }
+            product.sizes = normalizedSizes;
+        }
+
+        if (price !== undefined) {
+            const parsedPrice = Number(price);
+            if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
+                return res.status(400).json({ msg: 'Precio inválido.' });
+            }
+            product.price = parsedPrice;
+        }
+
+        if (image) {
+            const isValidUrl = validator.isURL(String(image), {
+                protocols: ['http', 'https'],
+                require_protocol: true
+            });
+            if (!isValidUrl) {
+                return res.status(400).json({ msg: 'URL de imagen no válida (usa http/https).' });
+            }
+            product.image = String(image).trim();
+        }
+
+        if (description) product.description = String(description).trim();
+        if (category) product.category = String(category).trim().toLowerCase();
+        if (typeof isActive === 'boolean') product.isActive = isActive;
+
+        await product.save();
+        return res.status(200).json({ msg: 'Producto actualizado exitosamente', product });
+    } catch (err) {
+        console.error('Error al editar producto:', err);
+        return res.status(500).json({ msg: 'Error en el servidor.' });
+    }
+};
+
+// Eliminar un producto (solo admin)
+exports.deleteProduct = async (req, res) => {
+    try {
+        const isAdmin =
+            req.user && (req.user.role === 'admin' || req.user.isAdmin === true);
+        if (!isAdmin) {
+            return res.status(403).json({ msg: 'Acceso denegado. Solo administradores pueden eliminar productos.' });
+        }
+
+        const deleted = await Product.findByIdAndDelete(req.params.id);
+        if (!deleted) {
+            return res.status(404).json({ msg: 'Producto no encontrado' });
+        }
+
+        return res.status(200).json({ msg: 'Producto eliminado exitosamente', product: deleted });
+    } catch (err) {
+        console.error('Error al eliminar producto:', err);
+        return res.status(500).json({ msg: 'Error en el servidor.' });
+    }
+};
 

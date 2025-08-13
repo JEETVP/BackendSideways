@@ -1,11 +1,17 @@
-﻿const Product = require('../Models/Product');
+﻿// controllers/productController.js
+const Product = require('../Models/Product');
 const validator = require('validator');
+
+// util: escapa caracteres especiales para armar un RegExp seguro
+const escapeRegExp = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // Crear un nuevo producto (solo admin)
 exports.createProduct = async (req, res) => {
     try {
-        // 1) Solo admin
-        if (!req.user || req.user.role !== 'admin') {
+        // 1) Solo admin (acepta role:'admin' o isAdmin:true)
+        const isAdmin =
+            req.user && (req.user.role === 'admin' || req.user.isAdmin === true);
+        if (!isAdmin) {
             return res.status(403).json({ msg: 'Acceso denegado. Solo administradores pueden crear productos.' });
         }
 
@@ -43,25 +49,26 @@ exports.createProduct = async (req, res) => {
         }
 
         // 5) Evitar duplicados por nombre (case-insensitive)
+        const nameTrim = String(name).trim();
         const existing = await Product.findOne({
-            name: { $regex: `^${validator.escape(name.trim())}$`, $options: 'i' }
+            name: { $regex: `^${escapeRegExp(nameTrim)}$`, $options: 'i' }
         });
         if (existing) {
             return res.status(409).json({ msg: 'Ya existe un producto con ese nombre.' });
         }
 
-        // 6) Saneado básico
-        const sanitizedName = validator.escape(name.trim());
-        const sanitizedDescription = validator.escape(description.trim());
+        // 6) Normalizamos strings (sin escapar HTML para no dañar el texto)
+        const descriptionTrim = String(description).trim();
+        const categoryNorm = category ? String(category).trim().toLowerCase() : undefined;
 
-        // 7) Crear y guardar (el slug se autogenera en el modelo si seguiste mi schema)
+        // 7) Crear y guardar (el slug se autogenera en el modelo si lo agregaste)
         const newProduct = new Product({
-            name: sanitizedName,
+            name: nameTrim,
             sizes: normalizedSizes,
             price: parsedPrice,
             image: String(image).trim(),
-            description: sanitizedDescription,
-            category: category ? String(category).trim().toLowerCase() : undefined
+            description: descriptionTrim,
+            category: categoryNorm
         });
 
         await newProduct.save();
@@ -69,11 +76,9 @@ exports.createProduct = async (req, res) => {
     } catch (err) {
         console.error('Error al crear producto:', err);
 
-        // Errores comunes: duplicado por índice único (p.ej. slug)
         if (err && err.code === 11000) {
             return res.status(409).json({ msg: 'Conflicto por duplicado (índice único). Revisa nombre/slug.' });
         }
-        // Validación de Mongoose
         if (err?.name === 'ValidationError') {
             return res.status(400).json({ msg: 'Validación fallida', details: err.errors });
         }
@@ -103,4 +108,5 @@ exports.getProductById = async (req, res) => {
         return res.status(500).json({ msg: 'Error en el servidor.' });
     }
 };
+
 

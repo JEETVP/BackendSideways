@@ -1,4 +1,7 @@
 const mongoose = require('mongoose');
+const RX_LETTERS = /^[\p{L}\s'-]+$/u;          // solo letras, espacios, ' y -
+const RX_LETTERS_NUM_HYPH = /^[\p{L}\p{N}\s-]+$/u;      // letras, números, espacios y -
+const RX_STREET = /^[\p{L}\p{N}\s#\-.]+$/u;   // calle: letras, números, espacio, #, -, .
 
 const cardSchema = new mongoose.Schema({
     cardNumber: {
@@ -43,13 +46,13 @@ const cardSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        match: [/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'El nombre solo puede contener letras']
+        match: [RX_LETTERS_NUM_HYPH, 'Nombre inválido'],
     },
     lastName: {
         type: String,
         required: true,
         trim: true,
-        match: [/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'El apellido solo puede contener letras']
+        match: [RX_LETTERS_NUM_HYPH, 'Apellido inválido'],
     }
 });
 

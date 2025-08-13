@@ -1,4 +1,7 @@
 const mongoose = require('mongoose');
+const RX_LETTERS = /^[\p{L}\s'-]+$/u;          // solo letras, espacios, ' y -
+const RX_LETTERS_NUM_HYPH = /^[\p{L}\p{N}\s-]+$/u;      // letras, números, espacios y -
+const RX_STREET = /^[\p{L}\p{N}\s#\-.]+$/u;   // calle: letras, números, espacio, #, -, .
 
 const addressSchema = new mongoose.Schema({
     userId: {
@@ -24,11 +27,11 @@ const addressSchema = new mongoose.Schema({
     extNumber: {
         type: String,
         required: true,
-        match: [/^\d+$/, 'El número exterior debe ser numérico']
+        match: [/^\d+[A-Za-z]?$/u, 'El número exterior debe ser numérico (puede llevar letra)']
     },
     intNumber: {
         type: String,
-        match: [/^\d*$/, 'El número interior debe ser numérico'],
+        match: [/^\d+[A-Za-z]?$/u, 'El número exterior debe ser numérico (puede llevar letra)'],
         default: ''
     },
     phone: {
@@ -45,7 +48,7 @@ const addressSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        match: [/^[\w\sáéíóúÁÉÍÓÚñÑ\-]+$/, 'Colonia inválida'],
+        match: [RX_LETTERS_NUM_HYPH, 'Colonia inválida'],
         minlength: 2,
         maxlength: 100
     },
@@ -53,7 +56,7 @@ const addressSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        match: [/^[\w\sáéíóúÁÉÍÓÚñÑ\-]+$/, 'Municipio inválido'],
+        match: [RX_LETTERS_NUM_HYPH, 'Municipio inválido'],
         minlength: 2,
         maxlength: 100
     },
@@ -61,7 +64,7 @@ const addressSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        match: [/^[\w\sáéíóúÁÉÍÓÚñÑ\-]+$/, 'Estado inválido'],
+        match: [RX_LETTERS_NUM_HYPH, 'Estado inválido'],
         minlength: 2,
         maxlength: 100
     },

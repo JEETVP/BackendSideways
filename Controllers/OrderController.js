@@ -70,20 +70,22 @@ exports.createOrder = async (req, res) => {
         // Procesar pago (TEST/DEV con confirmación server-side)
         const idempotencyKey = `order_${userId}_${Date.now()}`; // o usa tu orderNumber si ya lo generaste
 
+
         const paymentIntent = await stripe.paymentIntents.create({
             amount: Math.round(totalAmount * 100), // centavos
             currency: 'mxn',
-            payment_method: 'pm_card_visa',        // método de prueba que no requiere 3DS
-            confirm: true,                         // confirmamos aquí mismo
-            automatic_payment_methods: { enabled: true }
+            // desactiva cualquier método que requiera redirección/return_url
+            automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
+            // método de prueba (no pide 3DS)
+            payment_method: 'pm_card_visa',
+            confirm: true
         }, { idempotencyKey });
 
         if (paymentIntent.status !== 'succeeded') {
-            console.error('Stripe payment not succeeded:', paymentIntent.status, paymentIntent.last_payment_error);
+            console.error('[order] Stripe status:', paymentIntent.status, paymentIntent.last_payment_error);
             return res.status(400).json({ msg: 'Error en el pago con Stripe.', stripeStatus: paymentIntent.status });
         }
 
-        // Guarda el id del intent para rastreo/reembolsos
         const paymentIntentId = paymentIntent.id;
 
         // Generar número de orden

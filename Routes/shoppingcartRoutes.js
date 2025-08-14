@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const shoppingCartController = require('../Controllers/ShoppingCartController');
-const { authMiddleware } = require('../middlewares/authMiddleware');
+const { authMiddleware } = require('../Middlewares/authMiddleware');
 // Cambia la ruta del middleware según donde lo tengas
 
 // Consultar carrito (limpia items inválidos)

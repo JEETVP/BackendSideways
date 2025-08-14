@@ -11,7 +11,7 @@ const orderRoutes = require('./Routes/orderRoutes');
 const productRoutes = require('./Routes/productRoutes');
 const cardRoutes = require('./Routes/cardRoutes');
 const addressRoutes = require('./Routes/addressRoutes');
-const shoppingcartRoutes = require('./routes/shoppingcartRoutes');
+const shoppingcartRoutes = require('./Routes/shoppingcartRoutes');
 const app = express();
 
 // Middlewares base 

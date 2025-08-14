@@ -1,23 +1,23 @@
 // routes/shoppingcartRoutes.js
 const express = require('express');
 const router = express.Router();
+
 const shoppingCartController = require('../Controllers/ShoppingCartController');
-const authenticate = require('../Middlewares/authMiddleware');
-// Cambia la ruta del middleware según donde lo tengas
+const authenticate = require('../Middlewares/authMiddleware'); 
 
 // Consultar carrito (limpia items inválidos)
-router.get('/', authMiddleware, shoppingCartController.getCart);
+router.get('/', authenticate, shoppingCartController.getCart);
 
 // Añadir item al carrito
-router.post('/items', authMiddleware, shoppingCartController.addItem);
+router.post('/items', authenticate, shoppingCartController.addItem);
 
 // Eliminar item específico
-router.delete('/items', authMiddleware, shoppingCartController.removeItem);
+router.delete('/items', authenticate, shoppingCartController.removeItem);
 
 // Vaciar carrito completo
-router.delete('/', authMiddleware, shoppingCartController.clearCart);
+router.delete('/', authenticate, shoppingCartController.clearCart);
 
 // Preparar carrito para crear orden
-router.post('/prepare-order', authMiddleware, shoppingCartController.prepareOrderFromCart);
+router.post('/prepare-order', authenticate, shoppingCartController.prepareOrderFromCart);
 
-module.exports = router;
+module.exports = router; 

@@ -1,5 +1,5 @@
 // Controllers/ShoppingCartController.js
-const Cart = require('../Models/Cart');
+const Cart = require('../Models/ShoppingCart');
 const Product = require('../Models/Product');
 
 const normalizeSize = (s) => String(s || '').trim(); // si quieres forzar mayúsculas: .toUpperCase()

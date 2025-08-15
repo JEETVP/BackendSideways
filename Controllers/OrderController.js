@@ -284,3 +284,36 @@ exports.deleteOrderStatus = async (req, res) => {
     }
 };
 
+// Obtener todas las órdenes (solo admin) y eliminar las entregadas
+exports.getAllOrders = async (req, res) => {
+    try {
+        // Autorización: solo admin
+        const isAdmin = req.user && (req.user.role === 'admin' || req.user.isAdmin === true);
+        if (!isAdmin) {
+            return res.status(403).json({ msg: 'Acceso denegado. Solo administradores pueden ver todas las órdenes.' });
+        }
+
+        // Eliminar órdenes entregadas antes de devolver la lista
+        await Order.deleteMany({ status: 'Entregado' });
+
+        // Obtener todas las órdenes restantes
+        const orders = await Order.find()
+            .populate('user', 'name email')       // Muestra nombre y email del usuario
+            .populate('products.product', 'name') // Muestra nombre del producto
+            .populate('address')                  // Muestra dirección completa
+            .populate('card', 'firstName lastName expMonth expYear') // Datos básicos de la tarjeta
+            .sort({ createdAt: -1 });              // Las más recientes primero
+
+        return res.status(200).json({
+            msg: 'Órdenes obtenidas correctamente',
+            total: orders.length,
+            orders
+        });
+
+    } catch (err) {
+        console.error('Error al obtener todas las órdenes:', err);
+        return res.status(500).json({ msg: 'Error en el servidor al obtener las órdenes.' });
+    }
+};
+
+

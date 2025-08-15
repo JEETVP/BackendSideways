@@ -110,3 +110,18 @@ exports.deleteCard = async (req, res) => {
     }
 };
 
+exports.getCards = async (req, res) => {
+    try {
+        const userId = req.user.id || req.user._id;
+
+        // Excluimos datos sensibles como cardNumber y cvv
+        const cards = await Card.find({ userId })
+            .select('-cardNumber -cvv')
+            .lean();
+
+        return res.status(200).json({ cards });
+    } catch (err) {
+        console.error('Error al obtener tarjetas:', err);
+        return res.status(500).json({ msg: 'Error del servidor al obtener las tarjetas.' });
+    }
+};

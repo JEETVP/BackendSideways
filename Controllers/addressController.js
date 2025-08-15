@@ -104,3 +104,21 @@ exports.deleteAddress = async (req, res) => {
         res.status(500).json({ msg: 'Error del servidor al eliminar dirección.' });
     }
 };
+
+exports.getAddresses = async (req, res) => {
+    try {
+        const userId = req.user.id || req.user._id;
+
+        // Buscar todas las direcciones del usuario
+        const addresses = await Address.find({ userId }).sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            msg: 'Direcciones obtenidas correctamente',
+            addresses
+        });
+    } catch (err) {
+        console.error('Error al obtener direcciones:', err);
+        return res.status(500).json({ msg: 'Error del servidor al obtener direcciones.' });
+    }
+};
+

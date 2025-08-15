@@ -217,4 +217,70 @@ exports.updateOrderStatus = async (req, res) => {
         return res.status(500).json({ msg: 'Error en el servidor al actualizar el estatus.' });
     }
 };
+// Actualizar estatus de una orden (solo admin). Si es "Entregado", se elimina de la BD.
+exports.updateOrderStatus = async (req, res) => {
+    try {
+        // Autorización: solo admin
+        const isAdmin = req.user && (req.user.role === 'admin' || req.user.isAdmin === true);
+        if (!isAdmin) {
+            return res.status(403).json({ msg: 'Acceso denegado. Solo administradores pueden actualizar el estatus de la orden.' });
+        }
+
+        const { id } = req.params;
+        const { status } = req.body;
+        const allowed = ['Pendiente', 'Pagado', 'Enviado', 'Entregado', 'Cancelado'];
+
+        if (!allowed.includes(status)) {
+            return res.status(400).json({ msg: `Estatus inválido. Usa uno de: ${allowed.join(', ')}` });
+        }
+
+        // Si el nuevo estado es "Entregado", elimina directamente la orden
+        if (status === 'Entregado') {
+            // Opcional: podrías verificar que exista antes de borrar si quieres responder 404 en caso de no encontrada:
+            const existing = await Order.findById(id).select('_id orderNumber');
+            if (!existing) return res.status(404).json({ msg: 'Orden no encontrada' });
+
+            await Order.deleteOne({ _id: id });
+            return res.status(200).json({
+                msg: 'Orden marcada como entregada y eliminada de la base de datos',
+                orderId: id,
+                orderNumber: existing.orderNumber
+            });
+        }
+
+        // Para cualquier otro estado: actualizar normalmente
+        const order = await Order.findById(id);
+        if (!order) return res.status(404).json({ msg: 'Orden no encontrada' });
+
+        if (order.status === status) {
+            return res.status(200).json({ msg: 'La orden ya tiene este estatus', order });
+        }
+
+        const prevStatus = order.status;
+        order.status = status;
+
+        // Campos derivados
+        if (status === 'Pagado') {
+            order.processedAt = new Date();
+            order.isCancelled = false;
+        }
+        if (status === 'Cancelado') {
+            order.isCancelled = true;
+            // (Opcional) aquí podrías gestionar reembolso Stripe si aplica.
+        }
+
+        // Historial
+        order.statusHistory.push({ status });
+
+        await order.save();
+        return res.status(200).json({
+            msg: 'Estatus de la orden actualizado correctamente',
+            prevStatus,
+            order
+        });
+    } catch (err) {
+        console.error('Error al actualizar estatus de la orden:', err);
+        return res.status(500).json({ msg: 'Error en el servidor al actualizar el estatus.' });
+    }
+};
 

@@ -6,6 +6,7 @@ const authenticate = require('../Middlewares/authMiddleware');
 // Agregar una nueva dirección
 router.post('/add', authenticate, addressController.addAddress);
 router.delete('/delete/:id', authenticate, addressController.deleteAddress);
-
+// Obtener todas las direcciones del usuario logeado
+router.get('/', authenticate, addressController.getAddresses);
 
 module.exports = router;

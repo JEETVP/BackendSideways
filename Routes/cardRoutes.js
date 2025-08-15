@@ -10,6 +10,6 @@ router.post('/add', authenticate, cardController.addCard);
 router.delete('/delete/:id', authenticate, cardController.deleteCard);
 
 // Obtener todas las tarjetas del usuario logeado
-router.get('/my-cards', authMiddleware, cardController.getCards);
+router.get('/my-cards', authenticate, cardController.getCards);
 
 module.exports = router;

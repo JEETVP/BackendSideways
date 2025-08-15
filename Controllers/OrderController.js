@@ -6,7 +6,7 @@ const Card = require('../Models/Card');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
-const { removePurchasedFromCart } = require('../utils/clearCart');
+const { removePurchasedFromCart } = require('../Utils/clearCart');
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',

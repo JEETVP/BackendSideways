@@ -12,6 +12,7 @@ const productRoutes = require('./Routes/productRoutes');
 const cardRoutes = require('./Routes/cardRoutes');
 const addressRoutes = require('./Routes/addressRoutes');
 const shoppingcartRoutes = require('./Routes/shoppingcartRoutes');
+const wishlistRoutes = require('./Routes/wishlistRoutes');
 const app = express();
 
 // Middlewares base 
@@ -47,6 +48,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/cards', cardRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/cart', shoppingcartRoutes);
+app.use('/api/wishlist', wishlistRoutes);
 // === Rutas públicas ===
 app.get('/', (req, res) => {
     res.send('API de Sideways funcionando 👟🔥');

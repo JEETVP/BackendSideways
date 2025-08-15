@@ -218,7 +218,7 @@ exports.updateOrderStatus = async (req, res) => {
     }
 };
 // Actualizar estatus de una orden (solo admin). Si es "Entregado", se elimina de la BD.
-exports.updateOrderStatus = async (req, res) => {
+exports.deleteOrderStatus = async (req, res) => {
     try {
         // Autorización: solo admin
         const isAdmin = req.user && (req.user.role === 'admin' || req.user.isAdmin === true);

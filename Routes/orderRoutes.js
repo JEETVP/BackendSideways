@@ -9,7 +9,7 @@ router.patch('/:id/status', authenticate, /* requireAdmin, */ orderController.up
 router.get('/all', authenticate, OrderController.getAllOrders);
 
 // Actualizar estado de una orden (eliminar si es "Entregado")
-router.put('/:id/status', authenticate, OrderController.updateOrderStatus);
+router.put('/:id/status', authenticate, OrderController.deleteOrderStatus);
 
 
 module.exports = router;
